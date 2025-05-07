@@ -110,43 +110,43 @@ def get_stock(symbol: str) -> StockResponse:
             
             # Safely get income statement values using try/except for each field
             try:
-                net_income = income_statement_df.loc['Net Income'][0]
+                net_income = income_statement_df.loc['Net Income'].iloc[0]
                 net_income = None if pd.isna(net_income) else net_income
             except:
                 net_income = None
                 
             try:
-                operating_income = income_statement_df.loc['Operating Income'][0]
+                operating_income = income_statement_df.loc['Operating Income'].iloc[0]
                 operating_income = None if pd.isna(operating_income) else operating_income
             except:
                 operating_income = None
                 
             try:
-                operating_expense = income_statement_df.loc['Operating Expense'][0]
+                operating_expense = income_statement_df.loc['Operating Expense'].iloc[0]
                 operating_expense = None if pd.isna(operating_expense) else operating_expense
             except:
                 operating_expense = None
                 
             try:
-                gross_profit = income_statement_df.loc['Gross Profit'][0]
+                gross_profit = income_statement_df.loc['Gross Profit'].iloc[0]
                 gross_profit = None if pd.isna(gross_profit) else gross_profit
             except:
                 gross_profit = None
                 
             try:
-                cost_of_revenue = income_statement_df.loc['Cost Of Revenue'][0]
+                cost_of_revenue = income_statement_df.loc['Cost Of Revenue'].iloc[0]
                 cost_of_revenue = None if pd.isna(cost_of_revenue) else cost_of_revenue
             except:
                 cost_of_revenue = None
                 
             try:
-                revenue = income_statement_df.loc['Total Revenue'][0]
+                revenue = income_statement_df.loc['Total Revenue'].iloc[0]
                 revenue = None if pd.isna(revenue) else revenue
             except:
                 revenue = None
                 
             try:
-                ebitda = income_statement_df.loc['EBITDA'][0]
+                ebitda = income_statement_df.loc['EBITDA'].iloc[0]
                 ebitda = None if pd.isna(ebitda) else ebitda
             except:
                 ebitda = None
