@@ -1,3 +1,4 @@
 fastapi[standard]
-yfinance==0.2.54
+yfinance==0.2.59
 pandas
+redis==5.0.1

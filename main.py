@@ -4,8 +4,24 @@ import pandas as pd
 from typing import Dict, Any, Optional, TypedDict, List, Union
 from pydantic import BaseModel, Field
 from fastapi.middleware.cors import CORSMiddleware
+import redis
+import json
+import os
 
 app = FastAPI()
+
+# Initialize Redis client with environment variables
+redis_host = os.getenv('REDIS_HOST', 'localhost')
+redis_port = int(os.getenv('REDIS_PORT', 6379))
+redis_client = redis.Redis(
+    host=redis_host,
+    port=redis_port,
+    db=0,
+    decode_responses=True
+)
+
+# Cache expiration time (12 hours in seconds)
+CACHE_EXPIRATION = 12 * 60 * 60
 
 # Add CORS middleware
 app.add_middleware(
@@ -62,10 +78,17 @@ class StockResponse(BaseModel):
 # health check and version
 @app.get("/health", response_model=HealthResponse)
 def health_check() -> HealthResponse:
-    return HealthResponse(status="ok", version="1.0.0")
+    return HealthResponse(status="ok", version="1.1.0")
 
 @app.get("/stock/{symbol}", response_model=StockResponse)
 def get_stock(symbol: str) -> StockResponse:
+    # Check cache first
+    cache_key = f"stock:{symbol}"
+    cached_data = redis_client.get(cache_key)
+    
+    if cached_data:
+        return StockResponse(**json.loads(cached_data))
+        
     try:
         stock: yf.Ticker = yf.Ticker(symbol)
         income_statement: pd.DataFrame = stock.income_stmt
@@ -156,7 +179,7 @@ def get_stock(symbol: str) -> StockResponse:
             print(f"Error processing recommendations: {str(e)}")
             # Continue with default recommendations
 
-        return StockResponse(
+        response = StockResponse(
             stock_name=stock_name,
             recommendations=recommendations_model,
             net_income=net_income,
@@ -189,6 +212,15 @@ def get_stock(symbol: str) -> StockResponse:
             regular_market_price=stock_info.get('regularMarketPrice'),
             symbol=stock_info.get('symbol', symbol)
         )
+        
+        # Cache the response
+        redis_client.setex(
+            cache_key,
+            CACHE_EXPIRATION,
+            json.dumps(response.dict())
+        )
+        
+        return response
     except Exception as e:
         print(f"Error retrieving stock data: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error retrieving stock data: {str(e)}")
